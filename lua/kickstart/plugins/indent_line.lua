@@ -9,5 +9,10 @@ return {
   main = 'ibl',
   ---@module 'ibl'
   ---@type ibl.config
-  opts = {},
+  opts = {
+    indent = {
+      char = '│',
+    },
+    scope = { enabled = false }, -- Leave indent scope highlighting to mini.indentscope
+  },
 }
