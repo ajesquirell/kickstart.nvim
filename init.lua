@@ -833,7 +833,7 @@ require('lazy').setup({
     priority = 1000,
     config = function()
       require('catppuccin').setup {
-        flavour = 'macchiato', -- latte, frappe, macchiato, mocha
+        flavour = 'frappe', -- latte, frappe, macchiato, mocha
         styles = { comments = {} }, -- Disable italics in comments
       }
       vim.cmd.colorscheme 'catppuccin'
