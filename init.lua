@@ -886,7 +886,7 @@ require('lazy').setup({
       --  Check out: https://github.com/nvim-mini/mini.nvim
       require('mini.indentscope').setup {
         symbol = '│',
-        options = { try_as_border = true },
+        options = { try_as_border = true, indent_at_cursor = false },
       }
     end,
   },
