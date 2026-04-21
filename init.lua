@@ -906,7 +906,7 @@ require('lazy').setup({
 
       local animate = require 'mini.animate'
       return vim.tbl_deep_extend('force', opts, {
-        cursor = { timing = animate.gen_timing.linear { duration = 50, unit = 'total' } },
+        cursor = { enable = false },
         resize = {
           timing = animate.gen_timing.linear { duration = 50, unit = 'total' },
         },
