@@ -856,6 +856,7 @@ require('lazy').setup({
     opts = function(_, opts)
       -- don't use animate when scrolling with the mouse
       local mouse_scrolled = false
+      local mouse_resized = false
       for _, scroll in ipairs { 'Up', 'Down' } do
         local key = '<ScrollWheel' .. scroll .. '>'
         vim.keymap.set({ '', 'i' }, key, function()
@@ -864,14 +865,32 @@ require('lazy').setup({
         end, { expr = true })
       end
 
+      for _, mouse in ipairs { 'Drag', 'Release' } do
+        local key = '<Left' .. mouse .. '>'
+        vim.keymap.set({ '', 'i' }, key, function()
+          mouse_resized = mouse == 'Drag'
+          return key
+        end, { expr = true })
+      end
+
       local animate = require 'mini.animate'
       return vim.tbl_deep_extend('force', opts, {
         cursor = { enable = false },
+
         resize = {
           timing = animate.gen_timing.linear { duration = 50, unit = 'total' },
+          subresize = animate.gen_subresize.equal {
+
+            ---@diagnostic disable-next-line: unused-local
+            predicate = function(sizes_from, sizes_to)
+              if mouse_resized then return false end
+              return true
+            end,
+          },
         },
+
         scroll = {
-          timing = animate.gen_timing.linear { duration = 150, unit = 'total' },
+          timing = animate.gen_timing.linear { duration = 100, unit = 'total' },
           subscroll = animate.gen_subscroll.equal {
             predicate = function(total_scroll)
               if mouse_scrolled then
