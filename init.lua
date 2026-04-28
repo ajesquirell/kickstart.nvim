@@ -795,7 +795,20 @@ require('lazy').setup({
     ---@module 'todo-comments'
     ---@type TodoOptions
     ---@diagnostic disable-next-line: missing-fields
-    opts = { signs = false },
+    opts = {
+      signs = false,
+      highlight = {
+        keyword = 'bg',
+        pattern = { -- pattern or table of patterns, used for highlighting (vim regex)
+          [[.*<(KEYWORDS)\s*:]],
+          [[.*<(KEYWORDS)>]],
+        },
+      },
+      search = {
+        -- pattern = [[\b(KEYWORDS):]], -- ripgrep regex
+        pattern = [[\b(KEYWORDS)\b]], -- match without the extra colon.
+      },
+    },
   },
 
   { -- Collection of various small independent plugins/modules
