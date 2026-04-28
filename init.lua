@@ -545,8 +545,8 @@ require('lazy').setup({
       --  See `:help lsp-config` for information about keys and how to configure
       ---@type table<string, vim.lsp.Config>
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
+        clangd = {},
+        gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
         --
@@ -555,8 +555,6 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
-
-        stylua = {}, -- Used to format Lua code
 
         -- Special Lua Config, as recommended by neovim help docs
         lua_ls = {
@@ -598,6 +596,8 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         -- You can add other tools here that you want Mason to install
+        'stylua',
+        'prettierd',
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -607,6 +607,12 @@ require('lazy').setup({
         vim.lsp.enable(name)
       end
     end,
+  },
+
+  { -- Typescript language plugin
+    'pmizio/typescript-tools.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+    opts = {},
   },
 
   { -- Autoformat
@@ -625,27 +631,30 @@ require('lazy').setup({
     ---@type conform.setupOpts
     opts = {
       notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        if disable_filetypes[vim.bo[bufnr].filetype] then
-          return nil
-        else
-          return {
-            timeout_ms = 500,
-            lsp_format = 'fallback',
-          }
-        end
-      end,
+      format_on_save = nil,
+      formatters = {
+        prettierd = {
+          command = vim.fn.expand '~/.local/bin/prettierd-asdf', -- For using correct node version
+        },
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettier', 'prettier', stop_after_first = true },
+
+        json = { 'prettierd', 'prettier', stop_after_first = true },
+        jsonc = { 'prettierd', 'prettier', stop_after_first = true },
+        css = { 'prettierd', 'prettier', stop_after_first = true },
+        scss = { 'prettierd', 'prettier', stop_after_first = true },
+        html = { 'prettierd', 'prettier', stop_after_first = true },
+        yaml = { 'prettierd', 'prettier', stop_after_first = true },
+        markdown = { 'prettierd', 'prettier', stop_after_first = true },
       },
     },
   },
