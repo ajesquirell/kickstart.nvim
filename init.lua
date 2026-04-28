@@ -848,44 +848,6 @@ require('lazy').setup({
         symbol = '│',
         options = { try_as_border = true, indent_at_cursor = false },
       }
-
-      -- [[ MINI FILES]]
-      local minifiles = require 'mini.files'
-      minifiles.setup {
-        mappings = {
-          -- close = '<ESC>', -- default q
-          go_in_plus = '<CR>', -- default H
-          go_out = 'H', -- default h
-          go_out_plus = 'h', -- default H
-          reveal_cwd = '.', -- default @
-          synchronize = 's', -- default =
-        },
-        options = {
-          -- Whether to delete permanently or move into module-specific trash
-          permanent_delete = false,
-        },
-        windows = {
-          preview = true,
-          width_focus = 30,
-          width_preview = 70,
-        },
-      }
-      -- Keymaps from linkarzu
-      vim.keymap.set('n', '<leader>e', function()
-        local buf_name = vim.api.nvim_buf_get_name(0)
-        local dir_name = vim.fn.fnamemodify(buf_name, ':p:h')
-        if vim.fn.filereadable(buf_name) == 1 then
-          -- Pass the full file path to highlight the file
-          require('mini.files').open(buf_name, true)
-        elseif vim.fn.isdirectory(dir_name) == 1 then
-          -- If the directory exists but the file doesn't, open the directory
-          require('mini.files').open(dir_name, true)
-        else
-          -- If neither exists, fallback to the current working directory
-          require('mini.files').open(vim.uv.cwd(), true)
-        end
-      end, { desc = 'Open mini.files (Directory of Current File or CWD if not exists)' })
-      vim.keymap.set('n', '<leader>E', function() minifiles.open(vim.uv.cwd(), true, nil) end, { desc = 'Open mini.files (CWD)' })
     end,
   },
   {
