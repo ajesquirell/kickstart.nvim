@@ -333,8 +333,7 @@ require('lazy').setup({
         { '<leader>t', group = '[T]oggle' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
         { '<leader>g', group = 'Git Actions', mode = { 'n', 'v' } },
-        { '<leader>l', group = 'LSP Actions', mode = { 'n', 'v' } },
-        { 'gr', group = 'LSP Builtin Actions', mode = { 'n' } },
+        { 'gr', group = 'LSP Actions', mode = { 'n', 'v' } },
       },
     },
   },
@@ -424,18 +423,18 @@ require('lazy').setup({
 
           map('gd', Snacks.picker.lsp_definitions, '[G]oto [d]efinition')
           map('gD', Snacks.picker.lsp_declarations, '[G]oto [D]eclaration')
-          -- map('gR', function() Snacks.picker.lsp_references { include_current = true } end, '[G]oto [R]eferences')
-          map('gI', Snacks.picker.lsp_implementations, '[G]oto [I]mplementation')
           map('gy', Snacks.picker.lsp_type_definitions, '[G]oto T[y]pe Definition')
           map('gai', Snacks.picker.lsp_incoming_calls, 'C[a]lls Incoming')
           map('gao', Snacks.picker.lsp_outgoing_calls, 'C[a]lls Outgoing')
 
-          vim.keymap.set({ 'n', 'x' }, '<leader>la', function() vim.lsp.buf.code_action() end, { desc = 'Code Action' })
-          vim.keymap.set('n', '<leader>ln', function() vim.lsp.buf.rename() end, { desc = 'Rename Current Symbol' })
-          vim.keymap.set('n', '<leader>lh', function() vim.lsp.buf.signature_help() end, { desc = 'Signature Help' })
-          vim.keymap.set('n', '<leader>lr', function() Snacks.picker.lsp_references { include_current = true } end, { desc = 'References' })
-          vim.keymap.set('n', '<leader>ls', Snacks.picker.lsp_symbols, { desc = 'Symbols' })
-          vim.keymap.set('n', '<leader>lS', Snacks.picker.lsp_workspace_symbols, { desc = 'Workspace Symbols' })
+          vim.keymap.set({ 'n', 'x' }, 'gra', function() vim.lsp.buf.code_action() end, { desc = 'Code Action' })
+          vim.keymap.set('n', 'grn', function() vim.lsp.buf.rename() end, { desc = 'Rename Current Symbol' })
+          vim.keymap.set('n', 'grh', function() vim.lsp.buf.signature_help() end, { desc = 'Signature Help' })
+          vim.keymap.set('n', 'grr', function() Snacks.picker.lsp_references { include_current = true } end, { desc = 'References' })
+          vim.keymap.set('n', 'gri', function() Snacks.picker.lsp_implementations() end, { desc = 'Implementation' })
+          vim.keymap.set('n', 'grt', function() Snacks.picker.lsp_type_definitions() end, { desc = 'Type Definition' })
+          vim.keymap.set('n', 'grs', function() Snacks.picker.lsp_symbols() end, { desc = 'Symbols' })
+          vim.keymap.set('n', 'grS', function() Snacks.picker.lsp_workspace_symbols() end, { desc = 'Workspace Symbols' })
         end,
       })
     end,
@@ -628,7 +627,7 @@ require('lazy').setup({
     cmd = { 'ConformInfo' },
     keys = {
       {
-        '<leader>lf',
+        '<leader>F',
         function() require('conform').format { async = true } end,
         mode = '',
         desc = 'Format buffer',
@@ -843,9 +842,10 @@ require('lazy').setup({
       --  - ci'  - [C]hange [I]nside [']quote
       require('mini.ai').setup {
         -- NOTE: Avoid conflicts with the built-in incremental selection mappings on Neovim>=0.12 (see `:help treesitter-incremental-selection`)
+        -- ^^^ But I am keeping mini.ai behavior as it is more powerful at the moment
         mappings = {
-          around_next = 'aa',
-          inside_next = 'ii',
+          -- around_next = 'aa',
+          -- inside_next = 'ii',
         },
         n_lines = 500,
       }
