@@ -798,7 +798,8 @@ require('lazy').setup({
             -- i.e.
             -- CompileFlags:
             --│  CompilationDatabase: /home/aesquirell/Documents/code/master-service-itop2/build/Desktop_Qt_5_9_0_GCC_64bit-Debug/.qtc_clangd
-            ['@lsp.type.property.cpp'] = { fg = colors.red },
+            ['@lsp.type.property.cpp'] = { fg = colors.maroon },
+            ['@lsp.type.parameter.cpp'] = { fg = colors.flamingo },
             ['@lsp.typemod.variable.usedAsMutableReference.cpp'] = { italic = true },
           }
         end,
