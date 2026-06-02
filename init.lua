@@ -453,7 +453,13 @@ require('lazy').setup({
         ---@module 'mason.settings'
         ---@type MasonSettings
         ---@diagnostic disable-next-line: missing-fields
-        opts = {},
+        opts = {
+          registries = {
+            -- For C# roslyn package in Mason
+            'github:mason-org/mason-registry',
+            'github:Crashdummyy/mason-registry',
+          },
+        },
       },
       -- Maps LSP server names between nvim-lspconfig and Mason package names.
       'mason-org/mason-lspconfig.nvim',
@@ -590,6 +596,8 @@ require('lazy').setup({
             },
           },
         },
+
+        angularls = {}
       }
 
       -- Ensure the servers and tools above are installed
@@ -618,6 +626,12 @@ require('lazy').setup({
   { -- Typescript language plugin
     'pmizio/typescript-tools.nvim',
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+    opts = {},
+  },
+
+  {
+    'seblyng/roslyn.nvim',
+    ft = { 'cs', 'razor' },
     opts = {},
   },
 
