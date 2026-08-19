@@ -7,7 +7,7 @@
 ========         .----------------------.   | === |          ========
 ========         |.-""""""""""""""""""-.|   |-----|          ========
 ========         ||                    ||   | === |          ========
-========         ||   KICKSTART.NVIM   ||   |-----|          ========
+========         ||   NEOAUSTIN.NVIM   ||   |-----|          ========
 ========         ||                    ||   | === |          ========
 ========         ||                    ||   |-----|          ========
 ========         ||:Tutor              ||   |:::::|          ========
@@ -23,6 +23,7 @@
 What is Kickstart?
 
   Kickstart.nvim is *not* a distribution.
+  No, seriously, Kickstart.nvim is a distribution.
 
   Kickstart.nvim is a starting point for your own configuration.
     The goal is that you can read every line of code, top-to-bottom, understand
@@ -219,7 +220,7 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
 -- [[ Custom Keymaps ]]
-vim.keymap.set('i', 'jj', '<ESC>', { desc = 'Return to normal mode' })
+-- vim.keymap.set('i', 'jj', '<ESC>', { desc = 'Return to normal mode' })
 vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 
 -- Move selected lines up/down
@@ -250,6 +251,15 @@ end
 ---@type vim.Option
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
+
+-- Variables to handle dual FFF and Snacks picker usage
+local last_picker_used = 'snacks'
+local function open_fff(fn)
+  return function()
+    last_picker_used = 'fff'
+    fn()
+  end
+end
 
 -- [[ Configure and install plugins ]]
 --
@@ -349,12 +359,39 @@ require('lazy').setup({
     },
   },
   {
+    'dmtrKovalenko/fff',
+    build = function()
+      -- downloads a prebuilt binary or falls back to cargo build
+      require('fff.download').download_or_build_binary()
+    end,
+    opts = {
+      debug = {
+        enabled = true,
+        show_scores = true,
+      },
+      layout = {
+        prompt_position = 'top',
+      },
+    },
+    lazy = false, -- the plugin lazy-initialises itself
+    keys = {
+      { '<leader>ff', open_fff(function() require('fff').find_files() end), desc = 'FFFind files' },
+      { '<leader>sg', open_fff(function() require('fff').live_grep() end), desc = 'LiFFFe grep' },
+      { '<leader>sf', open_fff(function() require('fff').live_grep { grep = { modes = { 'fuzzy', 'plain' } } } end), desc = 'Live fffuzy grep' },
+      { '<leader>sw', open_fff(function() require('fff').live_grep_under_cursor() end), mode = { 'n', 'x' }, desc = 'Search current word / selection' },
+    },
+  },
+  {
     'folke/snacks.nvim',
     ---@module "snacks"
     ---@diagnostic disable-next-line: missing-fields
     opts = {
       ---@diagnostic disable-next-line: missing-fields
-      picker = { ui_select = true },
+      picker = {
+        ui_select = true,
+        formatters = { file = { filename_first = true, filename_only = false, truncate = 'left' } },
+        on_show = function() last_picker_used = 'snacks' end,
+      },
     },
     lazy = false,
     priority = 1000,
@@ -386,9 +423,9 @@ require('lazy').setup({
       { '<leader>gp', function() Snacks.picker.gh_pr() end, desc = 'GitHub Pull Requests (open)' },
       { '<leader>gP', function() Snacks.picker.gh_pr { state = 'all' } end, desc = 'GitHub Pull Requests (all)' },
       -- Grep
-      { '<leader>sg', function() Snacks.picker.grep() end, desc = 'Grep' },
+      -- { '<leader>sg', function() Snacks.picker.grep() end, desc = 'Grep' },
       { '<leader>sG', function() Snacks.picker.grep_buffers() end, desc = 'Grep Open Buffers' },
-      { '<leader>sw', function() Snacks.picker.grep_word() end, desc = 'Visual selection or word', mode = { 'n', 'x' } },
+      -- { '<leader>sw', function() Snacks.picker.grep_word() end, desc = 'Visual selection or word', mode = { 'n', 'x' } },
       -- search
       { '<leader>s"', function() Snacks.picker.registers() end, desc = 'Registers' },
       { '<leader>s/', function() Snacks.picker.search_history() end, desc = 'Search History' },
@@ -407,9 +444,20 @@ require('lazy').setup({
       { '<leader>sM', function() Snacks.picker.man() end, desc = 'Man Pages' },
       { '<leader>sp', function() Snacks.picker.lazy() end, desc = 'Search for Plugin Spec' },
       { '<leader>sq', function() Snacks.picker.qflist() end, desc = 'Quickfix List' },
-      { '<leader>sr', function() Snacks.picker.resume() end, desc = 'Resume' },
+      -- { '<leader>sr', function() Snacks.picker.resume() end, desc = 'Resume' },
       { '<leader>su', function() Snacks.picker.undo() end, desc = 'Undo History' },
       { '<leader>uC', function() Snacks.picker.colorschemes() end, desc = 'Colorschemes' },
+      {
+        '<leader>sr',
+        function()
+          if last_picker_used == 'fff' then
+            require('fff').resume()
+          else
+            Snacks.picker.resume()
+          end
+        end,
+        desc = 'Resume',
+      },
     },
     config = function(_, opts)
       require('snacks').setup(opts)
@@ -501,12 +549,18 @@ require('lazy').setup({
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+          -- Switch between source/header on supported clangd buffers
+          if client and client.name == 'clangd' then
+            vim.keymap.set('n', '<leader>o', '<cmd>LspClangdSwitchSourceHeader<cr>', { buffer = event.buf, desc = 'Switch C/C++ Source/Header' })
+          end
+
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client:supports_method('textDocument/documentHighlight', event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
@@ -545,12 +599,28 @@ require('lazy').setup({
         end,
       })
 
+      local function clangd_query_drivers()
+        local drivers = {}
+
+        for _, compiler in ipairs { 'clang', 'clang++', 'gcc', 'g++', 'cc', 'c++' } do
+          local path = vim.fn.exepath(compiler)
+          if path ~= '' then table.insert(drivers, path) end
+      end
+
+        return table.concat(drivers, ',')
+      end
+
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --  See `:help lsp-config` for information about keys and how to configure
       ---@type table<string, vim.lsp.Config>
       local servers = {
-        clangd = {},
+        clangd = {
+          cmd = {
+            'clangd',
+            '--query-driver=' .. clangd_query_drivers(),
+          },
+        },
         gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -597,7 +667,7 @@ require('lazy').setup({
           },
         },
 
-        angularls = {}
+        angularls = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -611,7 +681,6 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         -- You can add other tools here that you want Mason to install
         'stylua',
-        'prettierd',
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -655,11 +724,7 @@ require('lazy').setup({
       default_format_opts = {
         lsp_format = 'fallback', -- Use external formatters if configured below, otherwise use LSP formatting. Set to `false` to disable LSP formatting entirely.
       },
-      formatters = {
-        prettierd = {
-          command = vim.fn.expand '~/.local/bin/prettierd-asdf', -- For using correct node version
-        },
-      },
+      formatters = {},
       -- You can also specify external formatters in here.
       formatters_by_ft = {
         -- rust = { 'rustfmt' },
@@ -669,19 +734,23 @@ require('lazy').setup({
         c = { 'clang-format' },
         cpp = { 'clang-format' },
 
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        javascript = { 'prettierd', 'prettier', stop_after_first = true },
-        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
-        typescript = { 'prettierd', 'prettier', stop_after_first = true },
-        typescriptreact = { 'prettier', 'prettier', stop_after_first = true },
+        cs = { 'csharpier' },
 
-        json = { 'prettierd', 'prettier', stop_after_first = true },
-        jsonc = { 'prettierd', 'prettier', stop_after_first = true },
-        css = { 'prettierd', 'prettier', stop_after_first = true },
-        scss = { 'prettierd', 'prettier', stop_after_first = true },
-        html = { 'prettierd', 'prettier', stop_after_first = true },
-        yaml = { 'prettierd', 'prettier', stop_after_first = true },
-        markdown = { 'prettierd', 'prettier', stop_after_first = true },
+        -- You can use 'stop_after_first' to run the first available formatter from the list
+        javascript = { 'prettier' },
+        javascriptreact = { 'prettier' },
+        typescript = { 'prettier' },
+        typescriptreact = { 'prettier' },
+
+        htmlangular = { 'prettier' },
+
+        json = { 'prettier' },
+        jsonc = { 'prettier' },
+        css = { 'prettier' },
+        scss = { 'prettier' },
+        html = { 'prettier' },
+        yaml = { 'prettier' },
+        markdown = { 'prettier' },
       },
     },
   },

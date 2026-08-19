@@ -1,7 +1,7 @@
--- You can add your own plugins here or in other files in this directory!
 --  I promise not to create any merge conflicts in this directory :)
 --
 -- See the kickstart.nvim README for more information
+local palette = require('catppuccin.palettes').get_palette()
 
 ---@module 'lazy'
 ---@type LazySpec
@@ -61,5 +61,63 @@ return {
         end,
       })
     end,
+  },
+  {
+    'MagicDuck/grug-far.nvim',
+    -- Note (lazy loading): grug-far.lua defers all it's requires so it's lazy by default
+    -- additional lazy config to defer loading is not really needed...
+    config = function()
+      -- optional setup call to override plugin options
+      -- alternatively you can set options with vim.g.grug_far = { ... }
+      require('grug-far').setup {
+        -- options, see Configuration section below
+        -- there are no required options atm
+      }
+    end,
+    keys = {
+      {
+        '<leader>rg',
+        mode = { 'n', 'v' },
+        function() require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' } } end,
+        -- function() require('grug-far').open { transient = true } end,
+      },
+    },
+    {
+      'catgoose/nvim-colorizer.lua',
+      event = 'BufReadPre',
+      opts = {},
+    },
+    {
+      'petertriho/nvim-scrollbar',
+      dependencies = {
+        'lewis6991/gitsigns.nvim',
+      },
+      config = function()
+        require('scrollbar').setup {
+          handle = {
+            color = palette.overlay0,
+          },
+          marks = {
+            Cursor = {
+              color = palette.peach,
+              text = '◀',
+            },
+            GitAdd = {
+              priority = 7,
+              color = palette.green
+            },
+            GitChange = {
+              priority = 9,
+              color = palette.yellow
+            },
+            GitDelete = {
+              priority = 8,
+              color = palette.red
+            }
+          },
+        }
+        require('scrollbar.handlers.gitsigns').setup()
+      end,
+    },
   },
 }
