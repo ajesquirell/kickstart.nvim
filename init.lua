@@ -558,27 +558,28 @@ require('lazy').setup({
           end
 
           -- Fix angularls and typescript-tools conflicts (eg renaming, lsp_references happens twice)
-          if client.name == 'angularls' or client.name == 'typescript-tools' then
-            -- Let the current LspAttach finish before reconciling clients.
-            vim.schedule(function()
-              if vim.api.nvim_buf_is_valid(event.buf) then
-                local angular = vim.lsp.get_clients {
-                  bufnr = event.buf,
+          if client.name == 'typescript-tools' and not client._angular_method_filter then
+            local angular_only_methods = {
+              ['textDocument/references'] = true,
+              ['textDocument/rename'] = true,
+              ['textDocument/prepareRename'] = true,
+            }
+
+            local original_supports_method = client.supports_method
+            client.supports_method = function(self, method, bufnr)
+              if bufnr and angular_only_methods[method] then
+                local angular_clients = vim.lsp.get_clients {
+                  bufnr = bufnr,
                   name = 'angularls',
                 }
 
-                if #angular == 0 then return end
-
-                for _, ts_client in
-                  ipairs(vim.lsp.get_clients {
-                    bufnr = event.buf,
-                    name = 'typescript-tools',
-                  })
-                do
-                  vim.lsp.buf_detach_client(event.buf, ts_client.id)
-                end
+                if #angular_clients > 0 then return false end
               end
-            end)
+
+              return original_supports_method(self, method, bufnr)
+            end
+
+            client._angular_method_filter = true
           end
 
           -- The following two autocommands are used to highlight references of the
