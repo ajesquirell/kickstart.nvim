@@ -550,10 +550,35 @@ require('lazy').setup({
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
           local client = vim.lsp.get_client_by_id(event.data.client_id)
+          if not client then return end
 
           -- Switch between source/header on supported clangd buffers
-          if client and client.name == 'clangd' then
+          if client.name == 'clangd' then
             vim.keymap.set('n', '<leader>o', '<cmd>LspClangdSwitchSourceHeader<cr>', { buffer = event.buf, desc = 'Switch C/C++ Source/Header' })
+          end
+
+          -- Fix angularls and typescript-tools conflicts (eg renaming, lsp_references happens twice)
+          if client.name == 'angularls' or client.name == 'typescript-tools' then
+            -- Let the current LspAttach finish before reconciling clients.
+            vim.schedule(function()
+              if vim.api.nvim_buf_is_valid(event.buf) then
+                local angular = vim.lsp.get_clients {
+                  bufnr = event.buf,
+                  name = 'angularls',
+                }
+
+                if #angular == 0 then return end
+
+                for _, ts_client in
+                  ipairs(vim.lsp.get_clients {
+                    bufnr = event.buf,
+                    name = 'typescript-tools',
+                  })
+                do
+                  vim.lsp.buf_detach_client(event.buf, ts_client.id)
+                end
+              end
+            end)
           end
 
           -- The following two autocommands are used to highlight references of the
@@ -561,7 +586,7 @@ require('lazy').setup({
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          if client and client:supports_method('textDocument/documentHighlight', event.buf) then
+          if client:supports_method('textDocument/documentHighlight', event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
@@ -588,7 +613,7 @@ require('lazy').setup({
           -- code, if the language server you are using supports them
           --
           -- This may be unwanted, since they displace some of your code
-          if client and client:supports_method('textDocument/inlayHint', event.buf) then
+          if client:supports_method('textDocument/inlayHint', event.buf) then
             vim.keymap.set(
               'n',
               '<leader>th',
@@ -605,7 +630,7 @@ require('lazy').setup({
         for _, compiler in ipairs { 'clang', 'clang++', 'gcc', 'g++', 'cc', 'c++' } do
           local path = vim.fn.exepath(compiler)
           if path ~= '' then table.insert(drivers, path) end
-      end
+        end
 
         return table.concat(drivers, ',')
       end
