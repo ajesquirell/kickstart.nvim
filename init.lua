@@ -446,6 +446,7 @@ require('lazy').setup({
       { '<leader>sq', function() Snacks.picker.qflist() end, desc = 'Quickfix List' },
       -- { '<leader>sr', function() Snacks.picker.resume() end, desc = 'Resume' },
       { '<leader>su', function() Snacks.picker.undo() end, desc = 'Undo History' },
+      { '<leader>st', function() Snacks.picker.todo_comments() end, desc = 'TODO Comments' },
       { '<leader>uC', function() Snacks.picker.colorschemes() end, desc = 'Colorschemes' },
       {
         '<leader>sr',
