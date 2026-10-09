@@ -657,6 +657,20 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
+        arduino_language_server = {
+          {
+            filetypes = { 'arduino' },
+            root_dir = function(bufnr, on_dir)
+              local fname = vim.api.nvim_buf_get_name(bufnr)
+              on_dir(vim.fs.root(fname, { '*.ino' }))
+            end,
+            cmd = { 'arduino-language-server' },
+            capabilities = {
+              textDocument = { semanticTokens = vim.NIL },
+              workspace = { semanticTokens = vim.NIL },
+            },
+          },
+        },
 
         stylua = {}, -- Used to format Lua code
 
@@ -716,6 +730,9 @@ require('lazy').setup({
         vim.lsp.config(name, server)
         vim.lsp.enable(name)
       end
+
+      -- Arduino to be used for .ino
+      -- vim.filetype.add { extension = { ino = 'arduino' } }
     end,
   },
 
